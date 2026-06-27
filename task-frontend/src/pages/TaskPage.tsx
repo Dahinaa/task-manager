@@ -5,26 +5,35 @@ import {
 } from "@heroicons/react/24/outline";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Task } from "my-types";
+import type { Category, Task } from "my-types";
 import { deleteTask, getAllTasks } from "../api/taskapi";
+import { getAllCategories } from "../api/categoryapi";
 
 const TaskPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+
   const [titleQuery, setTitleQuery] = useState("");
   const [descriptionQuery, setDescriptionQuery] = useState("");
+  const [categoryQuery, setCategoryQuery] = useState("");
 
   useEffect(() => {
     getAllTasks().then((tasks: Task[]) => {
       setTasks(tasks);
       console.log(tasks);
     });
+
+    getAllCategories().then((categories: Category[]) => {
+      setCategories(categories);
+    });
   }, []);
 
   const filteredTasks = useMemo(() => {
     const title = titleQuery.trim().toLowerCase();
     const description = descriptionQuery.trim().toLowerCase();
+    const categoryId = categoryQuery === "" ? 0 : Number(categoryQuery);
 
     return tasks.filter((task) => {
       const matchesTitle =
@@ -34,9 +43,12 @@ const TaskPage: React.FC = () => {
         description.length === 0 ||
         task.description.toLowerCase().includes(description);
 
-      return matchesTitle && matchesDescription;
+      const matchesCategory =
+        categoryId === 0 || task.categoryId === categoryId;
+
+      return matchesTitle && matchesDescription && matchesCategory;
     });
-  }, [descriptionQuery, titleQuery, tasks]);
+  }, [descriptionQuery, titleQuery, categoryQuery, tasks]);
 
   const handleDelete = (id: number) => {
     const confirmDelete = window.confirm("Delete this task?");
@@ -131,6 +143,26 @@ const TaskPage: React.FC = () => {
                 onChange={(e) => setDescriptionQuery(e.target.value)}
               />
             </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600">
+                Category
+              </label>
+
+              <select
+                className="mt-1 w-44 rounded-xl border border-pink-200 bg-pink-50 px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-200"
+                value={categoryQuery}
+                onChange={(e) => setCategoryQuery(e.target.value)}
+              >
+                <option value="">All categories</option>
+
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -155,8 +187,9 @@ const TaskPage: React.FC = () => {
               <div className="col-span-1">#</div>
               <div className="col-span-2">Title</div>
               <div className="col-span-3">Description</div>
-              <div className="col-span-2">Priority</div>
-              <div className="col-span-2">Completed</div>
+              <div className="col-span-1">Priority</div>
+              <div className="col-span-1">Done</div>
+              <div className="col-span-2">Category</div>
               <div className="col-span-2 text-center">Actions</div>
             </div>
 
@@ -196,7 +229,7 @@ const TaskPage: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-1">
                     <p className="md:hidden text-xs font-bold text-pink-500">
                       Priority
                     </p>
@@ -206,9 +239,9 @@ const TaskPage: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-1">
                     <p className="md:hidden text-xs font-bold text-pink-500">
-                      Completed
+                      Done
                     </p>
 
                     <span
@@ -219,6 +252,16 @@ const TaskPage: React.FC = () => {
                       }
                     >
                       {task.completed ? "Yes 🌸" : "No 🧸"}
+                    </span>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <p className="md:hidden text-xs font-bold text-pink-500">
+                      Category
+                    </p>
+
+                    <span className="inline-flex rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700 border border-purple-200">
+                      {task.category?.name ?? task.categoryId}
                     </span>
                   </div>
 
