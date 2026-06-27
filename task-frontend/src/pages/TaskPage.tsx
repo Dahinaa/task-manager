@@ -4,10 +4,13 @@ import {
   PencilIcon,
 } from "@heroicons/react/24/outline";
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { Task } from "my-types";
 import { deleteTask, getAllTasks } from "../api/taskapi";
 
 const TaskPage: React.FC = () => {
+  const navigate = useNavigate();
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [titleQuery, setTitleQuery] = useState("");
   const [descriptionQuery, setDescriptionQuery] = useState("");
@@ -138,7 +141,10 @@ const TaskPage: React.FC = () => {
               Results 🌸
             </h2>
 
-            <button className="inline-flex items-center justify-center rounded-full bg-pink-500 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-pink-200 hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-300">
+            <button
+              onClick={() => navigate("/tasks/new")}
+              className="inline-flex items-center justify-center rounded-full bg-pink-500 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-pink-200 hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-pink-300"
+            >
               NEW TASK ✨
             </button>
           </div>
@@ -219,9 +225,9 @@ const TaskPage: React.FC = () => {
                   <div className="md:col-span-2 flex justify-start md:justify-center gap-3">
                     <button
                       onClick={() =>
-                        window.confirm(
-                          `Save the changes for "${task.title}"?`
-                        )
+                        navigate(`/tasks/${task.id}/edit`, {
+                          state: { task },
+                        })
                       }
                       className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-pink-50 text-pink-500 hover:bg-pink-100 hover:text-pink-700"
                     >
