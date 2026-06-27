@@ -1,15 +1,20 @@
 import { Request, Response } from "express";
+import Category from "../models/category";
 
-const categories = [
-  { id: 1, name: "Escuela" },
-  { id: 2, name: "Casa" },
-  { id: 3, name: "Personal" },
-];
+export const getAllCategories = async (req: Request, res: Response) => {
+  try {
+    const categories = await Category.findAll();
 
-export const getAllCategories = (req: Request, res: Response) => {
-  res.json({
-    status: "success",
-    message: "Categories found",
-    payload: categories,
-  });
+    res.json({
+      status: "success",
+      message: "Categories found",
+      payload: categories,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Error finding categories",
+      payload: error,
+    });
+  }
 };
