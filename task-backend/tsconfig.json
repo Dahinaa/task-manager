@@ -5,8 +5,11 @@
     "rootDir": ".",
     "outDir": "./dist",
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "strict": true,
+    "strictPropertyInitialization": false,
+    "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
   "include": ["index.ts", "src/**/*.ts"],

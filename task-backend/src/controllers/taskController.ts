@@ -1,96 +1,147 @@
 import { Request, Response } from "express";
+import Task from "../models/task";
+import Category from "../models/category";
 
-let tasks = [
-  {
-    id: 1,
-    title: "Estudiar backend",
-    description: "Repasar rutas y controladores",
-    priority: "Alta",
-    completed: false,
-    categoryId: 1,
-  },
-];
+export const getAllTasks = async (req: Request, res: Response) => {
+  try {
+    const tasks = await Task.findAll({
+      include: [Category],
+    });
 
-export const getAllTasks = (req: Request, res: Response) => {
-  res.json({
-    status: "success",
-    message: "Tasks found",
-    payload: tasks,
-  });
-};
-
-export const getTaskById = (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  const task = tasks.find((task) => task.id === id);
-
-  if (!task) {
-    return res.status(404).json({
+    res.json({
+      status: "success",
+      message: "Tasks found",
+      payload: tasks,
+    });
+  } catch (error) {
+    res.status(500).json({
       status: "error",
-      message: "Task not found",
-      payload: null,
+      message: "Error finding tasks",
+      payload: error,
     });
   }
-
-  res.json({
-    status: "success",
-    message: "Task found",
-    payload: task,
-  });
 };
 
-export const createTask = (req: Request, res: Response) => {
-  const { title, description, priority, categoryId } = req.body;
+export const getTaskById = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
 
-  const newTask = {
-    id: Date.now(),
-    title,
-    description,
-    priority,
-    completed: false,
-    categoryId,
-  };
+    const task = await Task.findByPk(id, {
+      include: [Category],
+    });
 
-  tasks.push(newTask);
+    if (!task) {
+      return res.status(404).json({
+        status: "error",
+        message: "Task not found",
+        payload: null,
+      });
+    }
 
-  res.status(201).json({
-    status: "success",
-    message: "Task created",
-    payload: newTask,
-  });
-};
-
-export const updateTask = (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  const taskIndex = tasks.findIndex((task) => task.id === id);
-
-  if (taskIndex === -1) {
-    return res.status(404).json({
+    res.json({
+      status: "success",
+      message: "Task found",
+      payload: task,
+    });
+  } catch (error) {
+    res.status(500).json({
       status: "error",
-      message: "Task not found",
-      payload: null,
+      message: "Error finding task",
+      payload: error,
     });
   }
-
-  tasks[taskIndex] = {
-    ...tasks[taskIndex],
-    ...req.body,
-  };
-
-  res.json({
-    status: "success",
-    message: "Task updated",
-    payload: tasks[taskIndex],
-  });
 };
 
-export const deleteTask = (req: Request, res: Response) => {
-  const id = Number(req.params.id);
+export const createTask = async (req: Request, res: Response) => {
+  try {
+    const { title, description, priority, completed, categoryId } = req.body;
 
-  tasks = tasks.filter((task) => task.id !== id);
+    const newTask = await Task.create({
+      title,
+      description,
+      priority,
+      completed,
+      categoryId,
+    });
 
-  res.json({
-    status: "success",
-    message: "Task deleted",
-    payload: null,
-  });
+    const taskWithCategory = await Task.findByPk(newTask.id, {
+      include: [Category],
+    });
+
+    res.status(201).json({
+      status: "success",
+      message: "Task created",
+      payload: taskWithCategory,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Error creating task",
+      payload: error,
+    });
+  }
+};
+
+export const updateTask = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+
+    const task = await Task.findByPk(id);
+
+    if (!task) {
+      return res.status(404).json({
+        status: "error",
+        message: "Task not found",
+        payload: null,
+      });
+    }
+
+    await task.update(req.body);
+
+    const updatedTask = await Task.findByPk(id, {
+      include: [Category],
+    });
+
+    res.json({
+      status: "success",
+      message: "Task updated",
+      payload: updatedTask,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Error updating task",
+      payload: error,
+    });
+  }
+};
+
+export const deleteTask = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+
+    const task = await Task.findByPk(id);
+
+    if (!task) {
+      return res.status(404).json({
+        status: "error",
+        message: "Task not found",
+        payload: null,
+      });
+    }
+
+    await task.destroy();
+
+    res.json({
+      status: "success",
+      message: "Task deleted",
+      payload: null,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Error deleting task",
+      payload: error,
+    });
+  }
 };
